@@ -1,13 +1,12 @@
-import React from 'react';
-import GaugeChartComponent from './components/gauge-chart';
+import React from "react";
+import Dashboard from "./components/dashboard";
 
 const Home: React.FC = () => {
-    return (
-        <main>
-            <h1>Dynamic Gauge Charts</h1>
-            <GaugeChartComponent />
-        </main>
-    );
+  return (
+    <main>
+      <Dashboard />
+    </main>
+  );
 };
 
 export default Home;
