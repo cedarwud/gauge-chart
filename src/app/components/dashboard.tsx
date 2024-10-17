@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
+import io, { Socket } from "socket.io-client";
 import GaugeChart from "react-gauge-chart";
 import { debounce } from "lodash";
 import "../assets/css/dashboard.css";
@@ -28,8 +28,6 @@ const Dashboard: React.FC = () => {
   const [maxUsrpAccPower, setMaxUsrpAccPower] = useState(100);
   const [maxTotalAccPower, setMaxTotalAccPower] = useState(100);
 
-  const socket = io();
-
   const [radarData, setRadarData] = useState<DeviceData>({
     voltage: 0,
     current: 0,
@@ -49,6 +47,13 @@ const Dashboard: React.FC = () => {
   const [totalPower, setTotalPower] = useState<number>(0);
 
   useEffect(() => {
+    const socket: Socket = io("https://gauge-chart-psi.vercel.app");
+    socket.on("newData", (data) => {
+      setRadarData(data.radarData);
+      setUsrpData(data.usrpData);
+      setTotalPower(data.totalPower);
+    });
+
     const handleNewData = debounce((data) => {
       setRadarData(data.radarData);
       setUsrpData(data.usrpData);
@@ -115,9 +120,10 @@ const Dashboard: React.FC = () => {
     socket.on("newData", handleNewData);
 
     return () => {
-      socket.off("newData", handleNewData);
+      socket.off("newData"); // Remove the event listener
+      socket.disconnect(); // Disconnect the socket
     };
-  }, [radarAccPower, socket, totalPower, usrpAccPower]);
+  }, []);
 
   // Dummy data update for illustration
   // useEffect(() => {
