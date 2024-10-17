@@ -11,7 +11,6 @@ const port = parseInt(process.env.PORT || "3000", 10);
 
 app.prepare().then(() => {
   const server = express();
-  server.use(express.json());
   server.use(express.urlencoded({ extended: true }));
   const httpServer = createServer(server);
   const io = new SocketIOServer(httpServer);
@@ -26,6 +25,7 @@ app.prepare().then(() => {
 
   // API to emit data through Socket.io
   server.post("/api/data", express.json(), (req, res) => {
+    console.log(123);
     const reqBody = req.body;
     const radarData = {
       voltage: 0,
