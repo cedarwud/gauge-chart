@@ -6,9 +6,8 @@ import GaugeChart from "react-gauge-chart";
 import { debounce } from "lodash";
 import "../assets/css/dashboard.css";
 
-// Images for the devices
-import awr1642Image from "../assets/images/radar.jpg"; // Add the image to your public folder or use a CDN
-import usrpB210Image from "../assets/images/usrp.jpg"; // Add the image to your public folder or use a CDN
+import awr1642Image from "../assets/images/radar.jpg";
+import usrpB210Image from "../assets/images/usrp.jpg";
 
 interface DeviceData {
   voltage: number;
@@ -47,7 +46,10 @@ const Dashboard: React.FC = () => {
   const [totalPower, setTotalPower] = useState<number>(0);
 
   useEffect(() => {
-    const socket: Socket = io("http://localhost:3001");
+    // Use environment variable for the server URL, falling back to localhost for local development
+    const socketServerUrl =
+      process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || "http://localhost:3001";
+    const socket: Socket = io(socketServerUrl);
 
     const handleNewData = debounce((data) => {
       setRadarData(data.radarData);
@@ -56,69 +58,42 @@ const Dashboard: React.FC = () => {
       setUsrpAccPower((prevData) => prevData + data.usrpData.power);
       setTotalPower((prevData) => prevData + data.totalPower);
 
-      setMaxRadarVoltage((prevData) => {
-        if (data.radarData.voltage > prevData) {
-          return data.radarData.voltage;
-        }
-        return prevData;
-      });
-      setMaxRadarCurrent((prevData) => {
-        if (data.radarData.current > prevData) {
-          return data.radarData.current;
-        }
-        return prevData;
-      });
-      setMaxRadarPower((prevData) => {
-        if (data.radarData.power > prevData) {
-          return data.radarData.power;
-        }
-        return prevData;
-      });
-      setMaxUsrpVoltage((prevData) => {
-        if (data.usrpData.voltage > prevData) {
-          return data.usrpData.voltage;
-        }
-        return prevData;
-      });
-      setMaxUsrpCurrent((prevData) => {
-        if (data.usrpData.current > prevData) {
-          return data.usrpData.current;
-        }
-        return prevData;
-      });
-      setMaxUsrpPower((prevData) => {
-        if (data.usrpData.power > prevData) {
-          return data.usrpData.power;
-        }
-        return prevData;
-      });
-      setMaxRadarAccPower((prevData) => {
-        if (radarAccPower > prevData) {
-          return radarAccPower;
-        }
-        return prevData;
-      });
-      setMaxUsrpAccPower((prevData) => {
-        if (usrpAccPower > prevData) {
-          return usrpAccPower;
-        }
-        return prevData;
-      });
-      setMaxTotalAccPower((prevData) => {
-        if (totalPower > prevData) {
-          return totalPower;
-        }
-        return prevData;
-      });
-    }, 1000); // Update every 3000ms
+      setMaxRadarVoltage((prevData) =>
+        data.radarData.voltage > prevData ? data.radarData.voltage : prevData
+      );
+      setMaxRadarCurrent((prevData) =>
+        data.radarData.current > prevData ? data.radarData.current : prevData
+      );
+      setMaxRadarPower((prevData) =>
+        data.radarData.power > prevData ? data.radarData.power : prevData
+      );
+      setMaxUsrpVoltage((prevData) =>
+        data.usrpData.voltage > prevData ? data.usrpData.voltage : prevData
+      );
+      setMaxUsrpCurrent((prevData) =>
+        data.usrpData.current > prevData ? data.usrpData.current : prevData
+      );
+      setMaxUsrpPower((prevData) =>
+        data.usrpData.power > prevData ? data.usrpData.power : prevData
+      );
+      setMaxRadarAccPower((prevData) =>
+        radarAccPower > prevData ? radarAccPower : prevData
+      );
+      setMaxUsrpAccPower((prevData) =>
+        usrpAccPower > prevData ? usrpAccPower : prevData
+      );
+      setMaxTotalAccPower((prevData) =>
+        totalPower > prevData ? totalPower : prevData
+      );
+    }, 1000);
 
     socket.on("newData", handleNewData);
 
     return () => {
-      socket.off("newData"); // Remove the event listener
-      socket.disconnect(); // Disconnect the socket
+      socket.off("newData");
+      socket.disconnect();
     };
-  }, []);
+  }, [radarAccPower, usrpAccPower, totalPower]);
 
   return (
     <div className="dashboard-container">
