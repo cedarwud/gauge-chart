@@ -18,15 +18,15 @@ interface DeviceData {
 }
 
 const Dashboard: React.FC = () => {
-  const maxRadarVoltage = 15;
-  const maxRadarCurrent = 1000;
-  const maxRadarPower = 10000;
-  const maxUsrpVoltage = 15;
-  const maxUsrpCurrent = 1000;
-  const maxUsrpPower = 10000;
-  const maxRadarAccPower = 100;
-  const maxUsrpAccPower = 100;
-  const maxTotalAccPower = 100;
+  const [maxRadarVoltage, setMaxRadarVoltage] = useState(15);
+  const [maxRadarCurrent, setMaxRadarCurrent] = useState(1000);
+  const [maxRadarPower, setMaxRadarPower] = useState(10000);
+  const [maxUsrpVoltage, setMaxUsrpVoltage] = useState(15);
+  const [maxUsrpCurrent, setMaxUsrpCurrent] = useState(1000);
+  const [maxUsrpPower, setMaxUsrpPower] = useState(10000);
+  const [maxRadarAccPower, setMaxRadarAccPower] = useState(100);
+  const [maxUsrpAccPower, setMaxUsrpAccPower] = useState(100);
+  const [maxTotalAccPower, setMaxTotalAccPower] = useState(100);
 
   const socket = io();
 
@@ -55,6 +55,61 @@ const Dashboard: React.FC = () => {
       setRadarAccPower((prevData) => prevData + data.radarData.power);
       setUsrpAccPower((prevData) => prevData + data.usrpData.power);
       setTotalPower((prevData) => prevData + data.totalPower);
+
+      setMaxRadarVoltage((prevData) => {
+        if (data.radarData.voltage > prevData) {
+          return data.radarData.voltage;
+        }
+        return prevData;
+      });
+      setMaxRadarCurrent((prevData) => {
+        if (data.radarData.current > prevData) {
+          return data.radarData.current;
+        }
+        return prevData;
+      });
+      setMaxRadarPower((prevData) => {
+        if (data.radarData.power > prevData) {
+          return data.radarData.power;
+        }
+        return prevData;
+      });
+      setMaxUsrpVoltage((prevData) => {
+        if (data.usrpData.voltage > prevData) {
+          return data.usrpData.voltage;
+        }
+        return prevData;
+      });
+      setMaxUsrpCurrent((prevData) => {
+        if (data.usrpData.current > prevData) {
+          return data.usrpData.current;
+        }
+        return prevData;
+      });
+      setMaxUsrpPower((prevData) => {
+        if (data.usrpData.power > prevData) {
+          return data.usrpData.power;
+        }
+        return prevData;
+      });
+      setMaxRadarAccPower((prevData) => {
+        if (radarAccPower > prevData) {
+          return radarAccPower;
+        }
+        return prevData;
+      });
+      setMaxUsrpAccPower((prevData) => {
+        if (usrpAccPower > prevData) {
+          return usrpAccPower;
+        }
+        return prevData;
+      });
+      setMaxTotalAccPower((prevData) => {
+        if (totalPower > prevData) {
+          return totalPower;
+        }
+        return prevData;
+      });
     }, 1000); // Update every 3000ms
 
     socket.on("newData", handleNewData);
@@ -62,7 +117,7 @@ const Dashboard: React.FC = () => {
     return () => {
       socket.off("newData", handleNewData);
     };
-  }, [socket]);
+  }, [radarAccPower, socket, totalPower, usrpAccPower]);
 
   // Dummy data update for illustration
   // useEffect(() => {
