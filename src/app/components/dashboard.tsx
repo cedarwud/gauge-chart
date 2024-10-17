@@ -1,8 +1,9 @@
-// app/Dashboard.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
+import io from "socket.io-client";
 import GaugeChart from "react-gauge-chart";
+import { debounce } from "lodash";
 import "../assets/css/dashboard.css";
 
 // Images for the devices
@@ -17,59 +18,97 @@ interface DeviceData {
 }
 
 const Dashboard: React.FC = () => {
-  const [device1, setDevice1] = useState<DeviceData>({
+  const maxRadarVoltage = 15;
+  const maxRadarCurrent = 1000;
+  const maxRadarPower = 10000;
+  const maxUsrpVoltage = 15;
+  const maxUsrpCurrent = 1000;
+  const maxUsrpPower = 10000;
+  const maxRadarAccPower = 100;
+  const maxUsrpAccPower = 100;
+  const maxTotalAccPower = 100;
+
+  const socket = io();
+
+  const [radarData, setRadarData] = useState<DeviceData>({
     voltage: 0,
     current: 0,
     power: 0,
     accumulatedPower: 0,
   });
 
-  const [device2, setDevice2] = useState<DeviceData>({
+  const [usrpData, setUsrpData] = useState<DeviceData>({
     voltage: 0,
     current: 0,
     power: 0,
     accumulatedPower: 0,
   });
 
+  const [radarAccPower, setRadarAccPower] = useState<number>(0);
+  const [usrpAccPower, setUsrpAccPower] = useState<number>(0);
   const [totalPower, setTotalPower] = useState<number>(0);
 
-  // Dummy data update for illustration
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newDevice1 = {
-        voltage: Math.random() * 6,
-        current: Math.random() * 3,
-        power: Math.random() * 1000,
-        accumulatedPower: device1.accumulatedPower + Math.random(),
-      };
+    const handleNewData = debounce((data) => {
+      setRadarData(data.radarData);
+      setUsrpData(data.usrpData);
+      setRadarAccPower((prevData) => prevData + data.radarData.power);
+      setUsrpAccPower((prevData) => prevData + data.usrpData.power);
+      setTotalPower((prevData) => prevData + data.totalPower);
+    }, 1000); // Update every 3000ms
 
-      const newDevice2 = {
-        voltage: Math.random() * 6,
-        current: Math.random() * 3,
-        power: Math.random() * 1000,
-        accumulatedPower: device2.accumulatedPower + Math.random(),
-      };
+    socket.on("newData", handleNewData);
 
-      setDevice1(newDevice1);
-      setDevice2(newDevice2);
-      setTotalPower(newDevice1.accumulatedPower + newDevice2.accumulatedPower);
-    }, 3000);
+    return () => {
+      socket.off("newData", handleNewData);
+    };
+  }, [socket]);
 
-    return () => clearInterval(interval);
-  }, [device1, device2]);
+  // Dummy data update for illustration
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     const newDevice1 = {
+  //       voltage: Math.random() * 6,
+  //       current: Math.random() * 3,
+  //       power: Math.random() * 1000,
+  //       accumulatedPower: radarData.accumulatedPower + Math.random(),
+  //     };
+
+  //     const newDevice2 = {
+  //       voltage: Math.random() * 6,
+  //       current: Math.random() * 3,
+  //       power: Math.random() * 1000,
+  //       accumulatedPower: usrpData.accumulatedPower + Math.random(),
+  //     };
+
+  //     setRadarData(newDevice1);
+  //     setUsrpData(newDevice2);
+  //     setTotalPower(newDevice1.accumulatedPower + newDevice2.accumulatedPower);
+  //   }, 3000);
+
+  //   return () => clearInterval(interval);
+  // }, [radarData, usrpData]);
 
   return (
     <div className="dashboard-container">
       <h1>Base Station Dashboard</h1>
       <div className="device-section">
-        <img
-          src={awr1642Image.src}
-          alt="AWR1642BOOST-ODS"
-          className="device-image"
-        />
-        <p>AWR1642BOOST-ODS</p>
-        <img src={usrpB210Image.src} alt="USRP B210" className="device-image" />
-        <p>USRP B210</p>
+        <div>
+          <p>AWR1642BOOST-ODS</p>
+          <img
+            src={awr1642Image.src}
+            alt="AWR1642BOOST-ODS"
+            className="device-image"
+          />
+        </div>
+        <div>
+          <p>USRP B210</p>
+          <img
+            src={usrpB210Image.src}
+            alt="USRP B210"
+            className="device-image"
+          />
+        </div>
       </div>
       <div className="charts-grid">
         <div className="chart-card">
@@ -77,15 +116,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-bolt"></i> Radar Voltage
           </h2>
           <GaugeChart
-            id="device1-voltage"
+            id="radarData-voltage"
             nrOfLevels={50}
             arcsLength={[0.2, 0.3, 0.5]} // Split into segments as needed
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green, Yellow, Red
-            percent={device1.voltage / 10} // Still using a percentage for fill
-            formatTextValue={() => `${device1.voltage.toFixed(2)} V`} // Show real value as text
+            percent={radarData.voltage / maxRadarVoltage} // Still using a percentage for fill
+            formatTextValue={() => `${radarData.voltage.toFixed(2)} V`} // Show real value as text
             textColor="#000000"
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -93,15 +133,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-wave-square"></i> Radar Current
           </h2>
           <GaugeChart
-            id="device1-current"
+            id="radarData-current"
             nrOfLevels={50}
             arcsLength={[0.2, 0.4, 0.4]} // Adjust arcs to represent safe, moderate, and high current ranges
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for mid, Red for high
-            percent={device1.current / 3} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${device1.current.toFixed(2)} A`} // Display the actual current value
+            percent={radarData.current / maxRadarCurrent} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${radarData.current.toFixed(2)} mA`} // Display the actual current value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -109,15 +150,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-plug"></i> Radar Power Consumption
           </h2>
           <GaugeChart
-            id="device1-power"
+            id="radarData-power"
             nrOfLevels={50}
             arcsLength={[0.3, 0.4, 0.3]} // Adjust arcs for low, medium, and high power consumption
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for medium, Red for high
-            percent={device1.power / 1000} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${device1.power.toFixed(2)} mW`} // Display the actual power consumption value
+            percent={radarData.power / maxRadarPower} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${radarData.power.toFixed(2)} mW`} // Display the actual power consumption value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -125,15 +167,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-bolt"></i> USRP Voltage
           </h2>
           <GaugeChart
-            id="device2-voltage"
+            id="usrpData-voltage"
             nrOfLevels={50}
             arcsLength={[0.2, 0.3, 0.5]} // Split into segments as needed
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green, Yellow, Red
-            percent={device2.voltage / 10} // Still using a percentage for fill
-            formatTextValue={() => `${device2.voltage.toFixed(2)} V`} // Show real value as text
+            percent={usrpData.voltage / maxUsrpVoltage} // Still using a percentage for fill
+            formatTextValue={() => `${usrpData.voltage.toFixed(2)} V`} // Show real value as text
             textColor="#000000"
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -141,15 +184,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-wave-square"></i> USRP Current
           </h2>
           <GaugeChart
-            id="device2-current"
+            id="usrpData-current"
             nrOfLevels={50}
             arcsLength={[0.2, 0.4, 0.4]} // Adjust arcs to represent safe, moderate, and high current ranges
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for mid, Red for high
-            percent={device2.current / 3} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${device2.current.toFixed(2)} A`} // Display the actual current value
+            percent={usrpData.current / maxUsrpCurrent} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${usrpData.current.toFixed(2)} mA`} // Display the actual current value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -157,15 +201,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-plug"></i> USRP Power Consumption
           </h2>
           <GaugeChart
-            id="device2-power"
+            id="usrpData-power"
             nrOfLevels={50}
             arcsLength={[0.3, 0.4, 0.3]} // Adjust arcs for low, medium, and high power consumption
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for medium, Red for high
-            percent={device2.power / 1000} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${device2.power.toFixed(2)} mW`} // Display the actual power consumption value
+            percent={usrpData.power / maxUsrpPower} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${usrpData.power.toFixed(2)} mW`} // Display the actual power consumption value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -173,15 +218,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-battery-full"></i> Radar Accumulated Power
           </h2>
           <GaugeChart
-            id="device1-accumulated"
+            id="radarData-accumulated"
             nrOfLevels={50}
             arcsLength={[0.3, 0.4, 0.3]} // Adjust arcs for low, medium, and high power consumption
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for medium, Red for high
-            percent={device1.accumulatedPower / 30} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${device1.accumulatedPower.toFixed(2)} W`} // Display the actual power consumption value
+            percent={radarAccPower / 1000 / maxRadarAccPower} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${(radarAccPower / 1000).toFixed(2)} W`} // Display the actual power consumption value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -189,15 +235,16 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-battery-full"></i> USRP Accumulated Power
           </h2>
           <GaugeChart
-            id="device2-accumulated"
+            id="usrpData-accumulated"
             nrOfLevels={50}
             arcsLength={[0.3, 0.4, 0.3]} // Adjust arcs for low, medium, and high power consumption
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for medium, Red for high
-            percent={device2.accumulatedPower / 30} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${device2.accumulatedPower.toFixed(2)} W`} // Display the actual power consumption value
+            percent={usrpAccPower / 1000 / maxUsrpAccPower} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${(usrpAccPower / 1000).toFixed(2)} W`} // Display the actual power consumption value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
         <div className="chart-card">
@@ -209,11 +256,12 @@ const Dashboard: React.FC = () => {
             nrOfLevels={50}
             arcsLength={[0.3, 0.4, 0.3]} // Adjust arcs for low, medium, and high power consumption
             colors={["#00FF00", "#FFBF00", "#FF0000"]} // Green for low, Yellow for medium, Red for high
-            percent={totalPower / 30} // Use the calculated percentage value for the gauge
-            formatTextValue={() => `${totalPower.toFixed(2)} W`} // Display the actual power consumption value
+            percent={totalPower / 1000 / maxTotalAccPower} // Use the calculated percentage value for the gauge
+            formatTextValue={() => `${(totalPower / 1000).toFixed(2)} W`} // Display the actual power consumption value
             needleColor="#464A4F"
             needleBaseColor="#464A4F"
             textColor="#000000"
+            animate={false}
           />
         </div>
       </div>
