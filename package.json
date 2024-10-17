@@ -4,12 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/socket.io": "^3.0.2",
     "axios": "^1.7.7",
     "express": "^4.21.1",
     "lodash": "^4.17.21",
@@ -22,7 +23,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.17.10",
-    "@types/node": "^20",
+    "@types/node": "^20.16.12",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-gauge-chart": "^0.4.3",
