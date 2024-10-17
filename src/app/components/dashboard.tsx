@@ -47,13 +47,7 @@ const Dashboard: React.FC = () => {
   const [totalPower, setTotalPower] = useState<number>(0);
 
   useEffect(() => {
-    const socket: Socket = io("https://gauge-chart-psi.vercel.app:3001");
-
-    socket.on("newData", (data) => {
-      setRadarData(data.radarData);
-      setUsrpData(data.usrpData);
-      setTotalPower(data.totalPower);
-    });
+    const socket: Socket = io("http://localhost:3001");
 
     const handleNewData = debounce((data) => {
       setRadarData(data.radarData);
@@ -125,31 +119,6 @@ const Dashboard: React.FC = () => {
       socket.disconnect(); // Disconnect the socket
     };
   }, []);
-
-  // Dummy data update for illustration
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const newDevice1 = {
-  //       voltage: Math.random() * 6,
-  //       current: Math.random() * 3,
-  //       power: Math.random() * 1000,
-  //       accumulatedPower: radarData.accumulatedPower + Math.random(),
-  //     };
-
-  //     const newDevice2 = {
-  //       voltage: Math.random() * 6,
-  //       current: Math.random() * 3,
-  //       power: Math.random() * 1000,
-  //       accumulatedPower: usrpData.accumulatedPower + Math.random(),
-  //     };
-
-  //     setRadarData(newDevice1);
-  //     setUsrpData(newDevice2);
-  //     setTotalPower(newDevice1.accumulatedPower + newDevice2.accumulatedPower);
-  //   }, 3000);
-
-  //   return () => clearInterval(interval);
-  // }, [radarData, usrpData]);
 
   return (
     <div className="dashboard-container">
