@@ -1,7 +1,38 @@
 // src/app/api/data/route.tsx
 import { NextResponse } from "next/server";
+import { Server as HttpServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
+
+// Keep a reference to the Socket.IO server instance
+let io: SocketIOServer | null = null;
 
 export async function POST(req: Request) {
+  if (!io) {
+    // Create a simple HTTP server to run Socket.IO
+    const httpServer = new HttpServer();
+
+    // Initialize Socket.IO server
+    io = new SocketIOServer(httpServer, {
+      cors: {
+        origin: "*", // Update this with the correct origin for CORS handling
+        methods: ["GET", "POST"],
+      },
+    });
+
+    // Start listening on port 3001 (separate from Next.js server)
+    httpServer.listen(3001, () => {
+      console.log("Socket.IO server running on port 3001");
+    });
+
+    io.on("connection", (socket) => {
+      console.log("New client connected");
+
+      socket.on("disconnect", () => {
+        console.log("Client disconnected");
+      });
+    });
+  }
+
   try {
     // Parse the request body
     const reqBody = await req.json();
@@ -22,7 +53,6 @@ export async function POST(req: Request) {
 
     let totalPower = 0;
 
-    // Process incoming data
     for (const data of reqBody.data) {
       if (data.channel === 0) {
         if (data.type === "BATTERY_VOLTAGE") radarData.voltage = data.value;
@@ -43,12 +73,19 @@ export async function POST(req: Request) {
       }
     }
 
-    // Instead of emitting via Socket.IO, you can log the data or respond with the processed data.
-    // You can also consider sending this data to an external server (like a hosted Socket.IO server)
+    const responseData = {
+      radarData,
+      usrpData,
+      totalPower,
+    };
 
+    // Emit the processed data via Socket.IO to all connected clients
+    io.emit("newData", responseData);
+
+    // Return the response
     return NextResponse.json({
-      message: "Data processed successfully",
-      data: { radarData, usrpData, totalPower },
+      message: "Data sent successfully",
+      data: responseData,
     });
   } catch (error) {
     console.error("Error processing data:", error);

@@ -47,7 +47,8 @@ const Dashboard: React.FC = () => {
   const [totalPower, setTotalPower] = useState<number>(0);
 
   useEffect(() => {
-    const socket: Socket = io("https://gauge-chart-psi.vercel.app");
+    const socket: Socket = io("https://gauge-chart-psi.vercel.app:3001");
+
     socket.on("newData", (data) => {
       setRadarData(data.radarData);
       setUsrpData(data.usrpData);
