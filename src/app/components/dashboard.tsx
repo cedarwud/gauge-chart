@@ -114,7 +114,8 @@ const Dashboard: React.FC = () => {
     return () => {
       socket.disconnect();
     };
-  }, [radarAccPower, totalPower, usrpAccPower]);
+  }, []);
+
   return (
     <div className="dashboard-container">
       <h1>Base Station Dashboard</h1>
