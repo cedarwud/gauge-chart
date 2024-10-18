@@ -5,16 +5,16 @@ import express from "express";
 import cors from "cors"; // Import the CORS package
 
 const dev = process.env.NODE_ENV !== "production";
-const app = next({ dev });
-const handle = app.getRequestHandler();
+const server = next({ dev });
+const handle = server.getRequestHandler();
 
 const port = parseInt(process.env.PORT || "3000", 10);
 
-app.prepare().then(() => {
-  const server = express();
+server.prepare().then(() => {
+  const app = express();
 
   // Enable CORS for your frontend's URL
-  server.use(
+  app.use(
     cors({
       origin: "https://gauge-chart.onrender.com", // Your frontend URL
       methods: ["GET", "POST"], // Methods you want to allow
@@ -22,8 +22,8 @@ app.prepare().then(() => {
     })
   );
 
-  server.use(express.urlencoded({ extended: true }));
-  const httpServer = createServer(server);
+  app.use(express.urlencoded({ extended: true }));
+  const httpServer = createServer(app);
   const io = new SocketIOServer(httpServer, {
     cors: {
       origin: "https://gauge-chart.onrender.com",
@@ -42,7 +42,7 @@ app.prepare().then(() => {
   });
 
   // API to emit data through Socket.io
-  server.post("/api/data", express.json(), (req, res) => {
+  app.post("/api/data", express.json(), (req, res) => {
     const reqBody = req.body;
     const radarData = {
       voltage: 0,
@@ -90,11 +90,11 @@ app.prepare().then(() => {
   });
 
   // Default request handling
-  server.all("*", (req, res) => {
+  app.all("*", (req, res) => {
     return handle(req, res);
   });
 
-  // Start the server
+  // Start the app
   httpServer.listen(port, (err) => {
     if (err) throw err;
     console.log(`> Server is running on http://localhost:${port}`);
