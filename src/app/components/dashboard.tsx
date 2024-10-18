@@ -13,6 +13,8 @@ import usrpB210Image from "../assets/images/usrp.jpg";
 const SOCKET_SERVER_URL =
   process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:3000";
 
+console.log("Socket Server URL:", process.env.REACT_APP_SOCKET_SERVER_URL);
+
 interface DeviceData {
   voltage: number;
   current: number;
@@ -52,12 +54,17 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     // Use environment variable for the server URL, falling back to localhost for local development
     const socket = io(SOCKET_SERVER_URL, {
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Allow both transports
+      secure: true, // Ensure secure connection
     });
 
     // Add the connect_error event listener to catch connection errors
     socket.on("connect_error", (err) => {
       console.error("Connection error:", err.message);
+    });
+
+    socket.on("error", (err) => {
+      console.error("Socket error:", err.message);
     });
 
     const handleNewData = debounce((data) => {
@@ -118,6 +125,9 @@ const Dashboard: React.FC = () => {
             src={awr1642Image.src}
             alt="AWR1642BOOST-ODS"
             className="device-image"
+            width={300}
+            height={200}
+            priority
           />
         </div>
         <div>
@@ -126,6 +136,9 @@ const Dashboard: React.FC = () => {
             src={usrpB210Image.src}
             alt="USRP B210"
             className="device-image"
+            width={300}
+            height={200}
+            priority
           />
         </div>
       </div>

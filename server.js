@@ -26,10 +26,11 @@ app.prepare().then(() => {
   const httpServer = createServer(server);
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: "https://gauge-chart.onrender.com", // Your frontend URL
-      methods: ["GET", "POST"], // Methods to allow from the client
-      credentials: true, // Allow credentials if necessary
+      origin: "https://gauge-chart.onrender.com",
+      methods: ["GET", "POST"],
+      credentials: true,
     },
+    transports: ["polling", "websocket"], // Ensure both polling and websocket transports are supported
   });
 
   // Handle incoming socket connections
