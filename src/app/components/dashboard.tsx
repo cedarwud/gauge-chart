@@ -95,6 +95,11 @@ const Dashboard: React.FC = () => {
       handleNewData(receivedData); // Update state with the received data
     });
 
+    // Add the connect_error event listener to catch connection errors
+    socket.on("connect_error", (err) => {
+      console.error("Connection error:", err.message);
+    });
+
     // Clean up the socket connection when the component unmounts
     return () => {
       socket.disconnect();
