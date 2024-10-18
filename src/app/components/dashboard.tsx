@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
 import GaugeChart from "react-gauge-chart";
 import { debounce } from "lodash";
+import Image from "next/image";
 import "../assets/css/dashboard.css";
 
 import awr1642Image from "../assets/images/radar.jpg";
@@ -50,7 +51,14 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // Use environment variable for the server URL, falling back to localhost for local development
-    const socket = io(SOCKET_SERVER_URL);
+    const socket = io(SOCKET_SERVER_URL, {
+      transports: ["websocket"],
+    });
+
+    // Add the connect_error event listener to catch connection errors
+    socket.on("connect_error", (err) => {
+      console.error("Connection error:", err.message);
+    });
 
     const handleNewData = debounce((data) => {
       setRadarData(data.radarData);
@@ -95,11 +103,6 @@ const Dashboard: React.FC = () => {
       handleNewData(receivedData); // Update state with the received data
     });
 
-    // Add the connect_error event listener to catch connection errors
-    socket.on("connect_error", (err) => {
-      console.error("Connection error:", err.message);
-    });
-
     // Clean up the socket connection when the component unmounts
     return () => {
       socket.disconnect();
@@ -111,7 +114,7 @@ const Dashboard: React.FC = () => {
       <div className="device-section">
         <div>
           <p>AWR1642BOOST-ODS</p>
-          <img
+          <Image
             src={awr1642Image.src}
             alt="AWR1642BOOST-ODS"
             className="device-image"
@@ -119,7 +122,7 @@ const Dashboard: React.FC = () => {
         </div>
         <div>
           <p>USRP B210</p>
-          <img
+          <Image
             src={usrpB210Image.src}
             alt="USRP B210"
             className="device-image"
