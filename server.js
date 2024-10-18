@@ -2,6 +2,7 @@ import { createServer } from "http";
 import next from "next";
 import { Server as SocketIOServer } from "socket.io";
 import express from "express";
+import cors from "cors"; // Import the CORS package
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
@@ -11,9 +12,25 @@ const port = parseInt(process.env.PORT || "3000", 10);
 
 app.prepare().then(() => {
   const server = express();
+
+  // Enable CORS for your frontend's URL
+  server.use(
+    cors({
+      origin: "https://gauge-chart.onrender.com", // Your frontend URL
+      methods: ["GET", "POST"], // Methods you want to allow
+      credentials: true, // Allow credentials such as cookies
+    })
+  );
+
   server.use(express.urlencoded({ extended: true }));
   const httpServer = createServer(server);
-  const io = new SocketIOServer(httpServer);
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: "https://gauge-chart.onrender.com", // Your frontend URL
+      methods: ["GET", "POST"], // Methods to allow from the client
+      credentials: true, // Allow credentials if necessary
+    },
+  });
 
   // Handle incoming socket connections
   io.on("connection", (socket) => {
