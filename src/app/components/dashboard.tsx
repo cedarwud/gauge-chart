@@ -88,12 +88,12 @@ const Dashboard: React.FC = () => {
       );
     }, 1000);
 
-    socket.on("newData", handleNewData);
+    // socket.on("newData", handleNewData);
 
-    // socket.on("newData", (receivedData) => {
-    //   console.log("Received data:", receivedData);
-    //   handleNewData(receivedData); // Update state with the received data
-    // });
+    socket.on("newData", (receivedData) => {
+      console.log("Received data:", receivedData);
+      handleNewData(receivedData); // Update state with the received data
+    });
 
     // Clean up the socket connection when the component unmounts
     return () => {
