@@ -10,8 +10,7 @@ import "../assets/css/dashboard.css";
 import awr1642Image from "../assets/images/radar.jpg";
 import usrpB210Image from "../assets/images/usrp.jpg";
 
-const SOCKET_SERVER_URL =
-  process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:3000";
+const SOCKET_SERVER_URL = "https://gauge-chart.onrender.com/";
 
 console.log("SOCKET_SERVER_URL：", process.env.REACT_APP_SOCKET_SERVER_URL);
 
