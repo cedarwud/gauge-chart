@@ -10,9 +10,10 @@ import "../assets/css/dashboard.css";
 import awr1642Image from "../assets/images/radar.jpg";
 import usrpB210Image from "../assets/images/usrp.jpg";
 
-const SOCKET_SERVER_URL = "https://gauge-chart.onrender.com";
+const SOCKET_SERVER_URL =
+  process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:3000";
 
-console.log("Socket Server URL:", SOCKET_SERVER_URL);
+console.log("SOCKET_SERVER_URL：", process.env.REACT_APP_SOCKET_SERVER_URL);
 
 interface DeviceData {
   voltage: number;
@@ -113,7 +114,7 @@ const Dashboard: React.FC = () => {
     return () => {
       socket.disconnect();
     };
-  }, ["radarAccPower", "totalPower", "usrpAccPower"]);
+  }, []);
 
   return (
     <div className="dashboard-container">
