@@ -16,22 +16,14 @@ server.prepare().then(() => {
   // Enable CORS for your frontend's URL
   app.use(
     cors({
-      origin: "https://gauge-chart.onrender.com", // Your frontend URL
+      origin: "*", // Your frontend URL
       methods: ["GET", "POST"], // Methods you want to allow
-      credentials: true, // Allow credentials such as cookies
     })
   );
 
   app.use(express.urlencoded({ extended: true }));
   const httpServer = createServer(app);
-  const io = new SocketIOServer(httpServer, {
-    cors: {
-      origin: "https://gauge-chart.onrender.com",
-      methods: ["GET", "POST"],
-      credentials: true,
-    },
-    transports: ["polling", "websocket"], // Ensure both polling and websocket transports are supported
-  });
+  const io = new SocketIOServer(httpServer);
 
   // Handle incoming socket connections
   io.on("connection", (socket) => {
