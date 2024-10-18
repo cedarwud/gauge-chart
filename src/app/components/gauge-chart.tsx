@@ -20,7 +20,7 @@ const GaugeChartComponent: React.FC = () => {
     // Listen for 'newData' events from the server
     // socket.on("newData", (data: GaugeData[]) => {
     socket.on("newData", (data) => {
-      console.log(data.data);
+      // console.log(data.data);
       setGaugeData(data.data);
     });
 
