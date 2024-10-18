@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import io, { Socket } from "socket.io-client";
+import io from "socket.io-client";
 import GaugeChart from "react-gauge-chart";
 import { debounce } from "lodash";
 import "../assets/css/dashboard.css";
 
 import awr1642Image from "../assets/images/radar.jpg";
 import usrpB210Image from "../assets/images/usrp.jpg";
+
+const SOCKET_SERVER_URL = "http://localhost:3000";
 
 interface DeviceData {
   voltage: number;
@@ -47,9 +49,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // Use environment variable for the server URL, falling back to localhost for local development
-    const socketServerUrl =
-      process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || "http://localhost:3001";
-    const socket: Socket = io(socketServerUrl);
+    const socket = io(SOCKET_SERVER_URL);
 
     const handleNewData = debounce((data) => {
       setRadarData(data.radarData);
@@ -89,12 +89,16 @@ const Dashboard: React.FC = () => {
 
     socket.on("newData", handleNewData);
 
+    // socket.on("newData", (receivedData) => {
+    //   console.log("Received data:", receivedData);
+    //   handleNewData(receivedData); // Update state with the received data
+    // });
+
+    // Clean up the socket connection when the component unmounts
     return () => {
-      socket.off("newData");
       socket.disconnect();
     };
-  }, [radarAccPower, usrpAccPower, totalPower]);
-
+  }, [radarAccPower, totalPower, usrpAccPower]);
   return (
     <div className="dashboard-container">
       <h1>Base Station Dashboard</h1>
